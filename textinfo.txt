@@ -2068,3 +2068,45 @@ game ended
 You 16 
 Bot 0 
 You won!
+Grooove4life Юыху 20:00:16 09.03.2023  /dice
+3, 4, 4, 5, 5 
+Two pairs 
+18
+bot  
+bot throws 
+1, 1, 5, 2, 2 
+Two pairs 
+6
+bot  
+game ended 
+You 18 
+Bot 6 
+You won!
+Grooove4life Юыху 20:13:03 09.03.2023  /dice
+3, 3, 3, 3, 5 
+Square 
+24
+bot  
+bot throws 
+4, 4, 3, 1, 3 
+Two pairs 
+14
+bot  
+game ended 
+You 24 
+Bot 14 
+You won!
+Grooove4life Юыху 20:13:59 09.03.2023  /dice
+1, 6, 4, 6, 5 
+One pair 
+12
+bot  
+bot throws 
+2, 1, 1, 4, 1 
+Three 
+3
+bot  
+game ended 
+You 12 
+Bot 3 
+You won!

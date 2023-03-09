@@ -7,17 +7,19 @@ import random
 import os
 
 import sqlite3
+from dotenv import load_dotenv
+load_dotenv()
 
 # MAIN
 
-BOT_TOKEN = "5868080587:AAGoWmJF5iWMGoxMEi-oI7cYXN7LwE68POQ"
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 print (BOT_TOKEN)
 bot = telebot.TeleBot(BOT_TOKEN)
 
 tconv = lambda x: time.strftime("%H:%M:%S %d.%m.%Y", time.localtime(x))
 
 def write (user, message):
-  federal = open("Federal.txt", "r+")
+  federal = open("textinfo.txt", "r+")
   federal.seek(0, 2)
   federal.write(user + "  " + message + "\n")
   federal.close()
