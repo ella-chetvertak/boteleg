@@ -13,16 +13,16 @@ load_dotenv()
 # MAIN
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-print (BOT_TOKEN)
+print(BOT_TOKEN)
 bot = telebot.TeleBot(BOT_TOKEN)
 
 tconv = lambda x: time.strftime("%H:%M:%S %d.%m.%Y", time.localtime(x))
 
 def write (user, message):
-  federal = open("textinfo.txt", "r+")
-  federal.seek(0, 2)
-  federal.write(user + "  " + message + "\n")
-  federal.close()
+  textinfo = open("textinfo.txt", "r+")
+  textinfo.seek(0, 2)
+  textinfo.write(user + "  " + message + "\n")
+  textinfo.close()
 
 # DATABASE
 
@@ -30,20 +30,23 @@ conn = sqlite3.connect('db/teleBotDatabase.db', check_same_thread=False)
 cursor = conn.cursor()
 
 def db_table_val(user_id: int, user_name: str, user_surname: str, username: str):
-    cursor.execute(f"INSERT INTO `userI` VALUES (NULL, ?, ?, ?, ?)", (user_id, user_name, user_surname, username))
+    cursor.execute(f"INSERT INTO `userI` VALUES (NULL, ?, ?, ?, ?, 0)", (user_id, user_name, user_surname, username))
     conn.commit()
-    cursor.close()
 
-@bot.message_handler(commands=['register'])
-def get_text_messages(message):
-  bot.send_message(message.from_user.id, "Ваше ім`я було додано до бази даних")
+def upd_bal_plus(username: str, bal: int):
+    sql = f'''UPDATE `userI` SET BALANCE=BALANCE+{bal} WHERE USERNAME = '{username}' '''
+    cursor.execute(sql)
+    conn.commit()
 
-  us_id = message.from_user.id
-  us_name = message.from_user.first_name
-  us_sname = message.from_user.last_name
-  username = message.from_user.username
-		
-  db_table_val(user_id=us_id, user_name=us_name, user_surname=us_sname, username=username)
+def upd_bal_minus(username: str, bal: int):
+  sql = f'''UPDATE `userI` SET BALANCE=BALANCE-{bal} WHERE USERNAME = '{username}' '''
+  cursor.execute(sql)
+  conn.commit()
+
+def get_info_balance(username: int):
+    cursor.execute(f"SELECT balance FROM userI WHERE USERNAME = '{username}'")
+    result = cursor.fetchone()
+    return result
 
 # START, HELP
 
@@ -51,13 +54,22 @@ def get_text_messages(message):
 def send_welcome(message):
     bot.reply_to(message, "Howdy, how are you doing?")
 
+    us_id = message.from_user.id
+    us_name = message.from_user.first_name
+    us_sname = message.from_user.last_name
+    username = message.from_user.username
+
+    bot.send_message(message.from_user.id, f"Ви були зареєстровані під іменем {us_name}")
+
+    db_table_val(user_id=us_id, user_name=us_name, user_surname=us_sname, username=username)
+
 # WHO
 
 @bot.message_handler(commands=['who'])
 def send_who(message):
-    user_man = message.from_user.username + ' ' + message.from_user.first_name + ' ' + str (tconv(message.date))
+    user_man = message.from_user.username + ' ' + message.from_user.first_name + ' ' + str(tconv(message.date))
     bot.reply_to(message, user_man)
-    write (user_man, "/who")#поч здесь подчеркнуто красним?
+    write (user_man, "/who")
 
 # DICE
   
@@ -148,6 +160,10 @@ class Dice ():
 i = 0
 
 @bot.message_handler(commands=['dice'])
+def welc_dice(message):
+    msg = bot.reply_to(message, "Hello! What is your bet?")
+
+    bot.register_next_step_handler(msg, dicer)
 def dicer(message):
   user_man = message.from_user.username + ' ' + message.from_user.first_name + ' ' + str (tconv(message.date))
   diceResult1 = Dice.diceRand(message)
@@ -160,11 +176,22 @@ def dicer(message):
   diceFinal2 = f"bot throws \n{str(diceResult2[0])} \n{str(diceResult2[1])} \n{str(diceResult2[2])}"
   bot.send_message(message.chat.id, diceFinal2)
 
-  won = f"game ended \nYou {diceResult1[2]} \nBot {str(diceResult2[2])} \n" + "You won!" if diceResult1[2] > diceResult2[2] else "" + "You lose!(" if diceResult1[2] < diceResult2[2] else "" + "Draw" if diceResult1[2] == diceResult2[2] else ""
+  won = f"game ended \nYou {diceResult1[2]} \nBot {str(diceResult2[2])} \n" + "You won!" + f"\n+{int(message.text)} to your balance" if diceResult1[2] > diceResult2[2] else "" + f"You lose! -{int(message.text)}" if diceResult1[2] < diceResult2[2] else "" + "Draw" if diceResult1[2] == diceResult2[2] else ""
+  if diceResult1[2] > diceResult2[2]:
+    upd_bal_plus(message.from_user.username, int(message.text))
+  elif diceResult1[2] < diceResult2[2]:
+    upd_bal_minus(message.from_user.username, int(message.text))
   bot.send_message(message.chat.id, won)
   write (user_man, "/dice" + '\n' + diceFinal1)
   write ("bot", '\n' + diceFinal2)
   write ("bot", '\n' + won)
+
+
+# BALANCE
+
+@bot.message_handler(commands=['balance'])
+def get_balance(message):
+    bot.send_message(message.chat.id, get_info_balance(message.from_user.username))
 
 # ECHO
 
@@ -175,5 +202,7 @@ def echo_all(message):
   write(user_man, message.text)
 
 bot.infinity_polling()
+
+cursor.close()
 
     
